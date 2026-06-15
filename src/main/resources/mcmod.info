@@ -1,0 +1,10 @@
+[{
+  "modid": "tcresearchsolver",
+  "name": "Thaumcraft Research Solver",
+  "description": "Adds a Solve button to the Thaumcraft research table that auto-completes the aspect minigame.",
+  "version": "${modVersion}",
+  "mcversion": "${minecraftVersion}",
+  "url": "",
+  "authorList": ["muindor"],
+  "dependencies": ["Thaumcraft", "ThaumcraftResearchTweaks", "Forgelin"]
+}]
