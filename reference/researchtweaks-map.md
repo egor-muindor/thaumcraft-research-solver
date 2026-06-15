@@ -136,3 +136,78 @@ and reads `totalAmountOf` per `data.universe` gated by `hasDiscovered`. Applier 
   ForegroundUIComponent, ClickableUIComponent, MouseOverUIComponent, TickingUIComponent, UIContext}`.
 - Hex→pixel: `…table.gui.layout.ParchmentHexMapLayout` (+ inner `Hex`),
   `elan.tweaks.common.gui.layout.hex.HexLayout`, `…table.gui.layout.HexLayoutResearchNoteDataAdapter`.
+
+---
+
+## CONFIRMED GUI SEAM (Phase 4, Task 4.1 — `javap`/`javap -c`, 2026-06-15)
+
+### Injection target & strategy (DECIDED)
+`ResearchTableGuiFactory` is a Kotlin `object` (singleton `INSTANCE`):
+```kotlin
+fun create(player: EntityPlayer, tile: TileResearchTable): ComposableContainerGui
+```
+`create` builds a component list via chained `CollectionsKt.plus(...)` and passes it to
+`ComposableContainerGui.Companion.gui(scale, container, list, fn)`. The returned gui stores
+components in **mutable `private final ArrayList`s** (verified in the ctor bytecode — each is
+`new ArrayList()` then populated by interface): `backgrounds`, `foregrounds`, `tickables`,
+`mouseOverables`, `clickables` (+ dragndrop lists). The ctor categorizes each passed `UIComponent`
+into every list whose interface it implements.
+
+**Mixin plan (Task 4.7):**
+1. `@Mixin(ComposableContainerGui::class)` **accessor interface** exposing the mutable lists:
+   `@Accessor("clickables") fun getClickables(): MutableList<ClickableUIComponent>` (+ `foregrounds`,
+   `backgrounds`, `tickables`, `mouseOverables`).
+2. `@Mixin(ResearchTableGuiFactory::class)`, `@Inject(method = "create", at = @At("RETURN"))`,
+   handler params `(EntityPlayer player, TileResearchTable tile, CallbackInfoReturnable<ComposableContainerGui> cir)`.
+   Build one shared `SolveController` + our 3 components, then add each to the matching list(s) on
+   `cir.returnValue` cast to the accessor interface. (Container, if needed, = `gui.inventorySlots`
+   from `GuiContainer`; layout = `ParchmentHexMapLayout.INSTANCE`; player/tile from args.)
+   This matches the plan's preferred RETURN-append approach; lists are mutable so no redirect needed.
+   Register both in `mixins.tcresearchsolver.json` `"client"`.
+
+### Component interfaces (`elan.tweaks.common.gui.component`) — exact methods
+`UIComponent` is an **empty marker**. Sub-interfaces (each extends UIComponent):
+```kotlin
+BackgroundUIComponent.onDrawBackground(mouse: VectorXY, partialTicks: Float, ctx: UIContext)
+ForegroundUIComponent.onDrawForeground(mouse: VectorXY, scale: Scale, ctx: UIContext)
+ClickableUIComponent.onMouseClicked(mouse: VectorXY, button: MouseButton, ctx: UIContext)
+MouseOverUIComponent.onMouseOver(mouse: VectorXY, partialTicks: Float, ctx: UIContext)
+TickingUIComponent.onTick(partialTicks: Float, ctx: UIContext)
+```
+**Precedent — `CopyButtonUIComponent`** implements `Background + MouseOver + Clickable + Ticking`;
+ctor `(Rectangle bounds, VectorXY requirementsUiOrigin, ResearchProcessPort, ResearcherKnowledgePort, AspectsTreePort)`.
+→ `SolveButtonUIComponent` should implement the same 4 interfaces; ctor takes `(Rectangle bounds, SolveController)`.
+Spinner = `Ticking + Foreground`; Ghost = `Foreground`.
+
+### `UIContext` drawing API (what components call to render)
+```kotlin
+drawTag(aspect: Aspect, alpha: Int, pos: VectorXY)               // aspect icon, alpha 0..255-ish → GHOST
+drawTag(aspect, alpha, w, h, scaleF: Float, pos)                 // sized variant
+drawTagMonochrome(aspect, scaleF: Float, pos)
+drawWithShadow(text: String, pos: VectorXY)                      // text
+drawTooltip(pos, vararg lines: String); drawTooltipCentered(...); drawTooltipVerticallyCentered(...)
+drawOrb(pos[, color: Int]); drawLine(a: VectorXY, b: VectorXY)
+drawBlending(tex: TextureInstance, pos: VectorXY, color: Rgba)   // textured quad (button bg)
+playSound(name: String, volume: Float, pitch: Float, repeat: Boolean); getRandom(): Random
+```
+
+### DTOs (`elan.tweaks.common.gui.dto`, `…peripheral`)
+- `VectorXY` is an **interface**: `getX():Int`, `getY():Int`, `plus/minus(VectorXY|Int)`, `times(Double)`.
+  Concrete impls `Vector2D`/`Vector3D` (`Vector2D.Companion.getZERO()`); construct via those.
+- `Scale(width: Int, height: Int)` — getWidth/getHeight.
+- `Rgba(r,g,b,a: Float)` — for `drawBlending`.
+- `Rectangle(origin: VectorXY, scale: Scale)` — `contains(VectorXY)`, `getOrigin()`, `getScale()`, `plus(VectorXY)`. Button bounds + hit-test.
+- `MouseButton` (abstract; `isDown(): Boolean`, `Companion`).
+
+### Hex → pixel (ghost overlay positioning)
+`ParchmentHexMapLayout.INSTANCE` holds a **private static** `keyToHex: Map<String, Hex>` where
+`Hex(origin: VectorXY, center: VectorXY)` (`getCenter()` = pixel center). No public lookup — expose
+via an `@Accessor` mixin (`@Accessor("keyToHex") fun getKeyToHex(): Map<String, Hex>`) or reflection.
+⚠️ **Confirm at runClient**: that the map key equals our solver hexKey `"q,r"` and that `getCenter()`
+aligns at multiple window sizes (the live note area is rendered via `HexLayoutResearchNoteDataAdapter`,
+which `ParchmentHexMapLayout` mirrors). Ghost = least-critical cosmetic; tune placement in Phase 5.
+
+### @Mod dependencies / coremod (already correct in TcResearchSolverMod.kt)
+RT `mcmod.info` modid = **`ThaumcraftResearchTweaks`** (capitalized); manifest `TweakClass` =
+SpongeMixins (`spongemixins`), `ForceLoadAsMod: true`. Our `@Mod(dependencies = "required-after:forgelin;
+required-after:spongemixins;required-after:Thaumcraft;required-after:ThaumcraftResearchTweaks")` matches.
