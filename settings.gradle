@@ -1,0 +1,9 @@
+// TEMPORARY plain Kotlin/JVM build — verifies the MC-free `solver` package (Phase 2) only.
+// Phase 1 of the implementation plan replaces this with the GTNH settings convention.
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+rootProject.name = 'tcresearchsolver'

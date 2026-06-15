@@ -5,6 +5,10 @@
 .gradle/
 build/
 out/
+
+# Project-local toolchain (temporary plain-Kotlin build harness for Phase 2)
+/.jdks/
+/.gradle-dist/
 *.classpath
 *.project
 
