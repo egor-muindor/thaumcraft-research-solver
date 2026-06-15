@@ -86,3 +86,53 @@ KnowledgeBaseAdapter
 3. Preview: `ForegroundUIComponent` ghost overlay positioned via `ParchmentHexMapLayout`.
 4. Apply: `AspectCombinerAdapter.combine(...)` for missing compounds, then `ResearchNotesAdapter
    .write(...)` (or raw `PacketAspectPlaceToServer`) per cell; post-verify by re-reading the note.
+
+---
+
+## CONFIRMED SIGNATURES (Phase 3, `javap` on `reference/jars/ThaumcraftResearchTweaks-1.3.0.jar`)
+
+Pinned 2026-06-15 (Task 3.1). **Real package** is
+`elan.tweaks.thaumcraft.research.frontend.…` (the earlier `elan.tweaks.thaumcraft.adapters.…`
+guess was wrong).
+
+### Required ports we consume (read-side) — `…frontend.domain.ports.required`
+```kotlin
+interface AspectPool {                       // …ports.required.AspectPool
+  fun hasDiscovered(a: Aspect): Boolean
+  fun allDiscovered(): Array<Aspect>
+  fun amountOf(a: Aspect): Int
+  fun bonusAmountOf(a: Aspect): Int
+  fun totalAmountOf(a: Aspect): Int          // == amountOf + bonusAmountOf; use this for supply
+  fun anyComponentMissingFor(a: Aspect): Boolean
+  fun missing(demand: Map<Aspect,Int>): Boolean
+  fun contains(demand: Map<Aspect,Int>): Boolean
+}
+interface ScribeTools { fun areMissingOrEmpty(): Boolean }   // …ports.required.ScribeTools
+```
+
+### Adapters (live impls) — `…frontend.integration.adapters`
+```kotlin
+class AspectPoolAdapter(player: EntityPlayer, tile: TileResearchTable) : AspectPool
+class ScribeToolsAdapter(tile: TileResearchTable) : ScribeTools
+class AspectCombinerAdapter(player: EntityPlayer, tile: TileResearchTable) : AspectCombiner
+class ResearchNotesAdapter(player: EntityPlayer, tile: TileResearchTable, container: Container) : ResearchNotes {
+  fun getData(): ResearchNoteData          // <-- read live note (or use ResearchManager.getData directly)
+  fun findUsedAspectAmounts(): Map<Aspect,Int>
+  // write/erase/duplicate/combine return Kotlin Result<T> -> JVM-mangled names
+  // (write-gIAlu-s, erase-IoAF18A, combine-gIAlu-s). AWKWARD from Kotlin: we DON'T call these;
+  // the Applier sends TC PacketAspectPlaceToServer / PacketAspectCombinationToServer directly.
+  object HexType { const val VACANT = 0; const val ROOT = 1; const val NODE = 2 }  // == HexEntry.type
+}
+```
+**Phase 3 plan:** InventoryReader takes an `AspectPool` (caller builds `AspectPoolAdapter(player,tile)`)
+and reads `totalAmountOf` per `data.universe` gated by `hasDiscovered`. Applier gates apply on
+`ScribeToolsAdapter(tile).areMissingOrEmpty()`. BoardReader reads the note via
+`ResearchManager.getData(note)` directly (avoids the mangled adapter API).
+
+### GUI seam (mostly Phase 4 — FQNs pinned now) — `…frontend.integration.table.gui`
+- Factory: `…table.gui.ResearchTableGuiFactory` → builds `elan.tweaks.common.gui.ComposableContainerGui`.
+- Button precedent: `…table.gui.component.CopyButtonUIComponent`.
+- Component ifaces: `elan.tweaks.common.gui.component.{UIComponent, BackgroundUIComponent,
+  ForegroundUIComponent, ClickableUIComponent, MouseOverUIComponent, TickingUIComponent, UIContext}`.
+- Hex→pixel: `…table.gui.layout.ParchmentHexMapLayout` (+ inner `Hex`),
+  `elan.tweaks.common.gui.layout.hex.HexLayout`, `…table.gui.layout.HexLayoutResearchNoteDataAdapter`.

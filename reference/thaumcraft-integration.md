@@ -108,3 +108,82 @@ thaumcraft.api.IScribeTools                         // ink item interface
   knowledge API / the table's aspect pool — ResearchTweaks wraps this in `AspectPoolAdapter`).
 - Scribing tools (ink) presence — ResearchTweaks wraps this in `ScribeToolsAdapter`
   (`areMissingOrEmpty()`); back it with TC's `IScribeTools` / table inventory.
+
+---
+
+## CONFIRMED SIGNATURES (Phase 3, `javap` on `reference/jars/Thaumcraft-1.7.10-4.2.3.5a.jar`)
+
+Pinned 2026-06-15 (Task 3.1). Supersedes the speculative paths above where they differ.
+
+### Corrections to earlier notes
+- `ResearchNoteData` is at **`thaumcraft.common.lib.research.ResearchNoteData`** (NOT `thaumcraft.api.research`).
+- Two `HexUtils` exist in the jar; the one referenced by `ResearchNoteData.hexes` is
+  **`thaumcraft.common.lib.utils.HexUtils`** (the canonical one). Ignore `thaumcraft.common.lib.HexUtils`.
+- Packets are under **`thaumcraft.common.lib.network.playerdata`**.
+
+### Aspect / AspectList (`thaumcraft.api.aspects`) — confirmed exact
+```java
+public static LinkedHashMap<String,Aspect> Aspect.aspects;     // all registered aspects (every mod)
+public String  Aspect.getTag();
+public Aspect[] Aspect.getComponents();                        // length 0 (primal) or 2 (compound)
+public boolean Aspect.isPrimal();
+public int     Aspect.getColor();
+public static Aspect Aspect.getAspect(String tag);
+public static ArrayList<Aspect> Aspect.getPrimalAspects();     // 48 primals known incl. GTNH
+public static ArrayList<Aspect> Aspect.getCompoundAspects();
+// (Aspect.components field is package-private; use getComponents())
+public LinkedHashMap<Aspect,Integer> AspectList.aspects;       // player discovered amounts
+public int AspectList.getAmount(Aspect);
+public Aspect[] AspectList.getAspects();
+```
+
+### Research note (`thaumcraft.common.lib.research`) — confirmed exact
+```java
+public class ResearchNoteData {
+  public String key; public int color;
+  public HashMap<String, ResearchManager$HexEntry>      hexEntries; // placed/special cells, key "q,r"
+  public HashMap<String, thaumcraft.common.lib.utils.HexUtils$Hex> hexes; // grid SHAPE, key "q,r"
+  public boolean complete; public int copies;
+  public boolean isComplete();
+}
+public class ResearchManager$HexEntry { public Aspect aspect; public int type; HexEntry(Aspect, int); }
+```
+**`HexEntry.type` int constants (from RT `ResearchNotesAdapter$HexType`, `const val`):**
+`VACANT = 0`, `ROOT = 1`, `NODE = 2`.  (ROOT = pre-placed anchors to connect; NODE = player-written
+path cell; VACANT/absent = empty.) Runtime-verify against a real note in Phase 5.
+
+`HexUtils$Hex { public int q; public int r; Hex(int,int); }` — axial, identical to solver `Hex`.
+`static HashMap<String,Hex> HexUtils.generateHexes(int radius)`; `static int HexUtils.getDistance(Hex,Hex)`.
+
+### ResearchManager static helpers — confirmed exact
+```java
+public static ResearchNoteData ResearchManager.getData(ItemStack note);
+public static void             ResearchManager.updateData(ItemStack note, ResearchNoteData);   // server writes
+public static Aspect           ResearchManager.getCombinationResult(Aspect a, Aspect b);
+public static AspectList       ResearchManager.reduceToPrimals(AspectList);
+public static boolean          ResearchManager.checkResearchCompletion(ItemStack, ResearchNoteData, String player);
+```
+
+### Network packets (`thaumcraft.common.lib.network[.playerdata]`) — confirmed exact
+```java
+public static final SimpleNetworkWrapper PacketHandler.INSTANCE;   // .sendToServer(IMessage)
+
+// place aspect at hex (q,r) on table at (x,y,z):
+public PacketAspectPlaceToServer(EntityPlayer player, byte q, byte r, int x, int y, int z, Aspect aspect);
+
+// combine a1+a2 in the working pool at table (x,y,z):
+public PacketAspectCombinationToServer(EntityPlayer player, int x, int y, int z,
+                                       Aspect a1, Aspect a2, boolean ab1, boolean ab2, boolean ab3);
+```
+**Combine boolean semantics (decompiled `onMessage`):** server proceeds only if
+`(pool(a1) > 0 || ab1) && (pool(a2) > 0 || ab2)`. `ab1`/`ab2` bypass the "source present in pool"
+gate for a1/a2. **`ab3` is a dead parameter** — the ctor never stores it; pass `false`.
+→ Applier sends `false, false, false`: combine requires both components already in the pool, which
+the deepest-first planner guarantees.
+
+Both packets derive `dim`/`playerid` from the `EntityPlayer` internally. `(x,y,z)` = the
+`TileResearchTable`'s `xCoord/yCoord/zCoord` (inherited from `net.minecraft.tileentity.TileEntity`,
+public). Map solver tag → TC `Aspect` via `Aspect.getAspect(tag)`.
+
+`thaumcraft.common.tiles.TileResearchTable extends thaumcraft.api.TileThaumcraft implements IInventory`
+(has `public AspectList bonusAspects`).
