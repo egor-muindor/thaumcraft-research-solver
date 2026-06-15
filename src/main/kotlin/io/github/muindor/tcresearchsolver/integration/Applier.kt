@@ -135,10 +135,19 @@ object Applier {
                 is ApplyOp.Combine -> {
                     val a1 = thaumcraft.api.aspects.Aspect.getAspect(op.a)
                     val a2 = thaumcraft.api.aspects.Aspect.getAspect(op.b)
+                    // Mirror RT's AspectCombinerAdapter exactly: the server's combine gate is
+                    // `getAspectPoolFor(a) > 0 || abN` — i.e. each component is drawn from the player's
+                    // personal aspect pool if present, else (when abN is set) from the table's bonus
+                    // aspects. Our solver inventory uses totalAmountOf (personal + bonus), so a plan may
+                    // legitimately rely on a bonus-only component; sending abN=false would make the
+                    // server reject that combine. abN = "this component is available in the bonus pool".
+                    // (The 3rd boolean is a dead ctor param — never stored; RT passes true, we match.)
+                    val ab1 = tile.bonusAspects.getAmount(a1) > 0
+                    val ab2 = tile.bonusAspects.getAmount(a2) > 0
                     thaumcraft.common.lib.network.PacketHandler.INSTANCE.sendToServer(
                         thaumcraft.common.lib.network.playerdata.PacketAspectCombinationToServer(
                             player, x, y, z, a1, a2,
-                            false, false, false,
+                            ab1, ab2, true,
                         )
                     )
                 }

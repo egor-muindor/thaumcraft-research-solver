@@ -175,11 +175,18 @@ public PacketAspectPlaceToServer(EntityPlayer player, byte q, byte r, int x, int
 public PacketAspectCombinationToServer(EntityPlayer player, int x, int y, int z,
                                        Aspect a1, Aspect a2, boolean ab1, boolean ab2, boolean ab3);
 ```
-**Combine boolean semantics (decompiled `onMessage`):** server proceeds only if
-`(pool(a1) > 0 || ab1) && (pool(a2) > 0 || ab2)`. `ab1`/`ab2` bypass the "source present in pool"
-gate for a1/a2. **`ab3` is a dead parameter** — the ctor never stores it; pass `false`.
-→ Applier sends `false, false, false`: combine requires both components already in the pool, which
-the deepest-first planner guarantees.
+**Combine boolean semantics (decompiled `onMessage` + RT `AspectCombinerAdapter`):** the server
+proceeds only if `(getAspectPoolFor(a1) > 0 || ab1) && (getAspectPoolFor(a2) > 0 || ab2)`, where
+`getAspectPoolFor` reads the **player's personal aspect pool only**. During consumption, each
+component is taken from the personal pool if `getAspectPoolFor(a) > 0`, **else from the table's
+`bonusAspects` AspectList when `abN` is set**. So `abN` means "allow drawing component N from the
+table bonus pool." **`ab3` is a dead parameter** — the ctor never stores it.
+→ **Mirror RT exactly:** `ab1 = tile.bonusAspects.getAmount(a1) > 0`,
+`ab2 = tile.bonusAspects.getAmount(a2) > 0`, `ab3 = true` (RT passes true; irrelevant since dead).
+RT's `AspectCombinerAdapter.combine` constructs the packet precisely this way (verified via `javap -c`).
+> ⚠️ Do NOT hard-code `false,false,false`: our solver inventory uses `AspectPool.totalAmountOf`
+> (personal **+** bonus), so a feasible plan can rely on a component that only exists in the bonus
+> pool; `abN=false` would make the server silently reject that combine.
 
 Both packets derive `dim`/`playerid` from the `EntityPlayer` internally. `(x,y,z)` = the
 `TileResearchTable`'s `xCoord/yCoord/zCoord` (inherited from `net.minecraft.tileentity.TileEntity`,

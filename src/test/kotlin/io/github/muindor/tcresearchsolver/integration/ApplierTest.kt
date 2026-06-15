@@ -190,7 +190,94 @@ class ApplierTest {
             "Combine(void,air) [idx=$idxCompoundCombine] must precede Place [idx=$idxPlace]")
     }
 
-    // ----- Test 6: null board (no-op) -----
+    // ----- Test 6: partial compound supply (direct draw exhausted, then craft) -----
+
+    @Test fun `partial void supply - one drawn directly, the rest crafted`() {
+        val data = minimalData()
+        // two void placements, pool has only 1 void (+ plenty of primals)
+        val board = buildBoard(
+            Hex(0,  0) to CellState.Placed("void", locked = false),
+            Hex(0, -1) to CellState.Placed("void", locked = false),
+        )
+        val pool = mapOf("void" to 1, "air" to 5, "entropy" to 5)
+
+        val ops = planApply(solveResult(board), data, pool)
+
+        // 2 voids, 1 in supply ⇒ exactly ONE craft (Combine(air,entropy)) and TWO places.
+        val combines = ops.filterIsInstance<ApplyOp.Combine>()
+        val places   = ops.filterIsInstance<ApplyOp.Place>()
+        assertEquals(1, combines.size, "Expected exactly 1 Combine (1 void crafted) but got: $ops")
+        assertEquals(setOf("air", "entropy"), setOf(combines[0].a, combines[0].b))
+        assertEquals(2, places.size, "Expected 2 Place ops but got: $ops")
+        assertTrue(places.all { it.aspect == "void" })
+    }
+
+    // ----- Test 7: doubled-component recipe (c1 == c2) -----
+
+    @Test fun `recipe with a doubled component consumes two units and emits Combine(a,a)`() {
+        // pair = air + air
+        val data = buildAspectDataFrom(
+            listOf(
+                RegistryEntry("air",  emptyList(), isPrimal = true),
+                RegistryEntry("pair", listOf("air", "air"), isPrimal = false),
+            )
+        )
+        val board = buildBoard(
+            Hex(0, 0) to CellState.Placed("pair", locked = false),
+        )
+        val pool = mapOf("air" to 2)
+
+        val ops = planApply(solveResult(board), data, pool)
+
+        assertEquals(2, ops.size, "Expected [Combine(air,air), Place(pair)] but got: $ops")
+        val combine = ops[0] as ApplyOp.Combine
+        assertEquals("air", combine.a)
+        assertEquals("air", combine.b)
+        val place = ops[1] as ApplyOp.Place
+        assertEquals("pair", place.aspect)
+    }
+
+    // ----- Test 8: components shared across placements (no double-spend) -----
+
+    @Test fun `two crafted voids each get their own Combine - no double-spend, no throw`() {
+        val data = minimalData()
+        val board = buildBoard(
+            Hex(0,  0) to CellState.Placed("void", locked = false),
+            Hex(0, -1) to CellState.Placed("void", locked = false),
+        )
+        // exactly enough primals for two voids; if obtain double-spent, this would throw
+        val pool = mapOf("air" to 2, "entropy" to 2)
+
+        val ops = planApply(solveResult(board), data, pool)
+
+        val combines = ops.filterIsInstance<ApplyOp.Combine>()
+        val places   = ops.filterIsInstance<ApplyOp.Place>()
+        assertEquals(2, combines.size, "Each void needs its own Combine(air,entropy): $ops")
+        assertTrue(combines.all { setOf(it.a, it.b) == setOf("air", "entropy") })
+        assertEquals(2, places.size)
+        // Each Place must be preceded by at least one Combine (deepest-first invariant per placement).
+        val firstPlaceIdx = ops.indexOfFirst { it is ApplyOp.Place }
+        assertTrue(ops.take(firstPlaceIdx).any { it is ApplyOp.Combine },
+            "first Place must follow a Combine: $ops")
+    }
+
+    // ----- Test 9: components exhausted mid-plan throws (defensive infeasible guard) -----
+
+    @Test fun `crafting a primal-deficient board throws IllegalStateException`() {
+        val data = minimalData()
+        val board = buildBoard(
+            Hex(0,  0) to CellState.Placed("void", locked = false),
+            Hex(0, -1) to CellState.Placed("void", locked = false),
+        )
+        // only enough air/entropy for ONE void; the second obtain(air) exhausts the primal
+        val pool = mapOf("air" to 1, "entropy" to 1)
+
+        assertThrows(IllegalStateException::class.java) {
+            planApply(solveResult(board), data, pool)
+        }
+    }
+
+    // ----- Test 10: null board (no-op) -----
 
     @Test fun `null board in SolveResult returns empty ops list`() {
         val data = minimalData()
