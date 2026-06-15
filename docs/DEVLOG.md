@@ -45,3 +45,43 @@ boundary, compiled against the deobf classpath, runClient-verified in Phase 5).
 - Build: `./gradlew build` green on JDK 25; **169 tests, 0 failures**. Production
   reobf jar assembles. No runtime change yet (integration is dead code until the
   Phase 4 Mixin wires it), so no new PrismLauncher smoke this phase.
+
+## 2026-06-16 — Phase 4 (UI: Mixin + state machine + components) implemented
+
+The `ui` layer + the GUI Mixin. Pure logic is unit-tested; RT/MC-touching code is
+compile-verified and **runtime-validated at runClient (Phase 5.2 — pending)**.
+
+- **4.1 — GUI seam pinned** (`javap`): recorded in `reference/researchtweaks-map.md`
+  "CONFIRMED GUI SEAM". Key facts: `ResearchTableGuiFactory.create(player, tile)` →
+  `ComposableContainerGui` whose component lists are **mutable ArrayLists**; inject at
+  RETURN + append via an `@Accessor`. `TileResearchTable.data` is a public
+  `ResearchNoteData` (read the note directly — no Container needed). RT modid =
+  `ThaumcraftResearchTweaks`; coremod = `spongemixins`.
+- **4.2 SolveController** — pure state machine (Idle/Solving/Preview/Applying/Done/Error),
+  injected worker+applier ports, `previewConfirm` auto-apply. 43→44 tests.
+- **4.3 SolveWorker** — off-thread `solveWithValidation`; client-thread `pump()` delivers
+  progress/result (worker thread touches only atomics). Cancel→CANCELLED.
+- **4.4–4.6** — `SolveButtonUIComponent` (mirrors CopyButton; label/click by state, pumps
+  in onTick), `SpinnerComponent`, `GhostOverlayComponent` (translucent `drawTag` ghosts via
+  a hex→pixel lookup). Text-label rendering first cut (texture polish deferred).
+- **4.7 Mixin + glue** — `ResearchTableGuiFactoryMixin` (`@Inject(RETURN)`, `remap=false`,
+  appends the 3 components via `ComposableContainerGuiAccessor`), `ui/LiveWiring.kt`
+  (`buildSnapshot` from `tile.data`, `LiveApplierPort`, reflective `ParchmentHexMapLayout`
+  hex→pixel). `mixins.tcresearchsolver.json` client list registered.
+- **Review (Opus + Codex):** Codex caught a HIGH cancel-then-restart race (a superseded
+  solve could splice a stale-snapshot result into a new run) → fixed with a generation
+  counter; and a MED GUI-close leak (solve ran to budget after close) → fixed with a
+  pump heartbeat / orphan-timeout self-cancel. (LOW: spinner is frame-rate-paced — deferred.)
+- Build: `./gradlew build` green (mixin AP + refmap + reobf) on JDK 25; **219 tests, 0
+  failures**. Production jar `tcresearchsolver-<ver>.jar` deployed to the PrismLauncher
+  `GT_New_Horizons_2.8.4_Java_17-25` instance for runClient verification.
+
+### runClient verify checklist (Phase 5.2) — open items flagged during Phase 4
+1. The Mixin actually applies (Solve button appears in the RT research-table GUI).
+2. Button/spinner/ghost placement coords (first-cut `Vector2D(8,8/22/36)`) — tune to the GUI.
+3. Ghost alignment: `ParchmentHexMapLayout.keyToHex` key format == solver `"q,r"`, and
+   `getCenter()` aligns at multiple window sizes.
+4. Apply path: combine-before-place ordering accepted by the server; post-verify (currently
+   optimistic — needs a deferred re-read of `tile.data` after server sync).
+5. Ink-missing → Apply reports "scribing tools missing or empty" (abortReason → Error state).
+6. INFEASIBLE_INVENTORY path surfaces a useful message and returns to a usable state.
