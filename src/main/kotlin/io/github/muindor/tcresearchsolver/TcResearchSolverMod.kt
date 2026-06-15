@@ -28,6 +28,7 @@ object TcResearchSolverMod {
     @Mod.EventHandler
     fun preInit(e: FMLPreInitializationEvent) {
         log.info("Thaumcraft Research Solver preInit (version {})", Tags.VERSION)
+        io.github.muindor.tcresearchsolver.config.Config.load(e.suggestedConfigurationFile)
     }
 
     @Mod.EventHandler

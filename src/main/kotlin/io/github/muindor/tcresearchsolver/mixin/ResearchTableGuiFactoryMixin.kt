@@ -51,7 +51,7 @@ class ResearchTableGuiFactoryMixin {
         val gui = cir.returnValue ?: return
 
         val worker = SolveWorker()
-        val controller = SolveController(worker, LiveApplierPort(player, tile), previewConfirm = true)
+        val controller = SolveController(worker, LiveApplierPort(player, tile), previewConfirm = io.github.muindor.tcresearchsolver.config.Config.previewConfirm)
 
         // First-cut placement — runClient (Phase 5) will tune these coordinates.
         // Vector2D(Int, Int) confirmed via javap on ThaumcraftResearchTweaks-1.3.0.jar.

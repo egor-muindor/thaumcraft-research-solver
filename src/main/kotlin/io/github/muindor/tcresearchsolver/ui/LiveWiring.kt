@@ -8,6 +8,7 @@ import io.github.muindor.tcresearchsolver.integration.planApply
 import io.github.muindor.tcresearchsolver.integration.Applier
 import io.github.muindor.tcresearchsolver.solver.AspectData
 import io.github.muindor.tcresearchsolver.solver.DEFAULT_THRESHOLD
+import io.github.muindor.tcresearchsolver.solver.SolveBudget
 import io.github.muindor.tcresearchsolver.solver.SolveResult
 import io.github.muindor.tcresearchsolver.solver.budgetForRadius
 
@@ -43,7 +44,9 @@ fun buildSnapshot(
     val board = BoardReader.fromNoteData(noteData)
     val pool = elan.tweaks.thaumcraft.research.frontend.integration.adapters.AspectPoolAdapter(player, tile)
     val inventory = InventoryReader.read(pool, data, DEFAULT_THRESHOLD)
-    val budget = budgetForRadius(board.radius)
+    val base = budgetForRadius(board.radius)
+    val ms = io.github.muindor.tcresearchsolver.config.Config.maxSolveMs
+    val budget = if (ms > 0) SolveBudget(base.maxNodes, ms.toLong(), base.beam) else base
     return SolveSnapshot(data, board, inventory, budget, inventory.supply)
 }
 
