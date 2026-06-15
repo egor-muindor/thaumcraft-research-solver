@@ -6,7 +6,10 @@
   "target": "@env(DEFAULT)",
   "compatibilityLevel": "JAVA_8",
   "mixins": [],
-  "client": [],
+  "client": [
+    "ComposableContainerGuiAccessor",
+    "ResearchTableGuiFactoryMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

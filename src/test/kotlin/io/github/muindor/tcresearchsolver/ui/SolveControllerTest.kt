@@ -424,6 +424,22 @@ class SolveControllerTest {
         assertTrue(ctrl.state is SolveState.Idle)
     }
 
+    @Test
+    fun `onApplied with abortReason transitions to Error with that message`() {
+        val ctrl = controller(previewConfirm = true)
+        ctrl.snapshot = makeSolvableSnapshot()
+        ctrl.start()
+        worker.fireDone(makeOptimalResult())
+        ctrl.apply()
+        assertTrue(ctrl.state is SolveState.Applying)
+
+        applier.fireDone(ApplyReport(emptySet(), abortReason = "out of ink"))
+
+        val state = ctrl.state
+        assertTrue(state is SolveState.Error, "expected Error, got $state")
+        assertEquals("out of ink", (state as SolveState.Error).message)
+    }
+
     // ------------------------------------------------------------------
     // 10. reset() from any state → Idle; cancels worker when Solving
     // ------------------------------------------------------------------

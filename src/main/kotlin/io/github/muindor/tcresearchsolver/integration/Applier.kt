@@ -167,17 +167,21 @@ object Applier {
     }
 
     /**
-     * Re-read [note] and return the set of [ApplyOp.Place] keys whose aspect was not accepted
-     * by the server (absent from hexEntries or aspect tag mismatch).
+     * Return the set of [ApplyOp.Place] keys whose aspect was not accepted by the server
+     * (absent from hexEntries or aspect tag mismatch) in the supplied [noteData].
      *
-     * Call after a short delay to allow server sync packets to arrive.
+     * The caller is responsible for passing a freshly-read [noteData] (re-read after a short delay
+     * to allow server sync packets to arrive). The ItemStack indirection is dropped so that
+     * [io.github.muindor.tcresearchsolver.ui.LiveWiring] can pass `tile.data` directly.
      */
-    fun postVerify(note: net.minecraft.item.ItemStack, plan: List<ApplyOp>): Set<String> {
-        val data = thaumcraft.common.lib.research.ResearchManager.getData(note)
+    fun postVerify(
+        noteData: thaumcraft.common.lib.research.ResearchNoteData,
+        plan: List<ApplyOp>,
+    ): Set<String> {
         val placed = plan.filterIsInstance<ApplyOp.Place>()
         return placed
             .filter { p ->
-                val entry = data.hexEntries[p.key]
+                val entry = noteData.hexEntries[p.key]
                 entry == null || entry.aspect?.tag != p.aspect
             }
             .map { it.key }

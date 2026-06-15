@@ -19,8 +19,14 @@ data class SolveSnapshot(
 // Apply report
 // ---------------------------------------------------------------------------
 
-/** Result of applying a plan (empty rejectedCells == success). */
-data class ApplyReport(val rejectedCells: Set<String>)
+/**
+ * Result of applying a plan.
+ *
+ * Success = [abortReason] is null AND [rejectedCells] is empty.
+ * Abort   = [abortReason] is non-null (e.g. "out of ink"; cells unknown, may be empty).
+ * Partial = [abortReason] is null but [rejectedCells] is non-empty (server rejected some cells).
+ */
+data class ApplyReport(val rejectedCells: Set<String>, val abortReason: String? = null)
 
 // ---------------------------------------------------------------------------
 // Port interfaces (injected fakes in tests; real impls in later tasks)
@@ -181,10 +187,10 @@ class SolveController(
 
     fun onApplied(report: ApplyReport) {
         if (state != SolveState.Applying) return
-        state = if (report.rejectedCells.isEmpty()) {
-            SolveState.Done
-        } else {
-            SolveState.Error(
+        state = when {
+            report.abortReason != null     -> SolveState.Error(report.abortReason)
+            report.rejectedCells.isEmpty() -> SolveState.Done
+            else -> SolveState.Error(
                 "server rejected ${report.rejectedCells.size} cell(s): " +
                     report.rejectedCells.sorted().joinToString()
             )

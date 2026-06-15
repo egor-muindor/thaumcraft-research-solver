@@ -101,20 +101,25 @@ internal fun hexTypeOf(t: Int): HexType = when (t) {
 /**
  * Reads a live research note item and produces a solver [Board].
  *
- * **Only call in-game** — this method invokes TC's [thaumcraft.common.lib.research.ResearchManager]
+ * **Only call in-game** — this object invokes TC's [thaumcraft.common.lib.research.ResearchManager]
  * which is not populated in unit tests.
  */
 object BoardReader {
-    fun read(note: net.minecraft.item.ItemStack): Board {
-        val data = thaumcraft.common.lib.research.ResearchManager.getData(note)
 
+    /**
+     * Maps a live [thaumcraft.common.lib.research.ResearchNoteData] to a solver [Board].
+     *
+     * Factored out of [read] so that [io.github.muindor.tcresearchsolver.ui.LiveWiring] can pass
+     * a `ResearchNoteData` read directly from the tile (no ItemStack indirection).
+     */
+    fun fromNoteData(noteData: thaumcraft.common.lib.research.ResearchNoteData): Board {
         // noteHexes: "q,r" → Pair(q, r)
-        val noteHexes: Map<String, Pair<Int, Int>> = data.hexes.mapValues { (_, h) ->
+        val noteHexes: Map<String, Pair<Int, Int>> = noteData.hexes.mapValues { (_, h) ->
             Pair(h.q, h.r)
         }
 
         // entries: "q,r" → NoteEntry
-        val entries: Map<String, NoteEntry> = data.hexEntries.mapValues { (_, e) ->
+        val entries: Map<String, NoteEntry> = noteData.hexEntries.mapValues { (_, e) ->
             NoteEntry(
                 aspectTag = e.aspect?.tag,
                 type = hexTypeOf(e.type),
@@ -126,4 +131,12 @@ object BoardReader {
 
         return toBoard(noteHexes, entries, radius)
     }
+
+    /**
+     * Reads a live research note item and produces a solver [Board].
+     *
+     * Delegates to [fromNoteData] after unwrapping via [thaumcraft.common.lib.research.ResearchManager.getData].
+     */
+    fun read(note: net.minecraft.item.ItemStack): Board =
+        fromNoteData(thaumcraft.common.lib.research.ResearchManager.getData(note))
 }
