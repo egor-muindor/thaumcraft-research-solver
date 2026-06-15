@@ -250,4 +250,47 @@ class SolveWorkerTest {
         // After result is set in resultRef, isRunning() returns false
         assertFalse(worker.isRunning(), "should not be running after completion")
     }
+
+    // ------------------------------------------------------------------
+    // 6. Restart supersedes a still-running solve — the generation guard
+    //    discards the stale run's result (regression for the cancel-then-restart race).
+    // ------------------------------------------------------------------
+    @Test
+    fun `restart supersedes a running solve - stale result is discarded`() {
+        val worker = SolveWorker()
+        val doneRef = AtomicReference<SolveResult?>(null)
+        val doneCount = AtomicInteger(0)
+
+        // Run 1: large board, full budget — cannot finish in the microseconds before Run 2 starts.
+        worker.start(
+            makeLargeSnapshot(),
+            onProgress = { _: Progress -> },
+            onDone = { r: SolveResult -> doneCount.incrementAndGet(); doneRef.set(r) },
+        )
+
+        // Run 2: trivial board, started immediately. This bumps the generation, so Run 1 must
+        // self-cancel (shouldCancel sees the generation mismatch) and must NOT publish its result.
+        worker.start(
+            makeTrivialSnapshot(),
+            onProgress = { _: Progress -> },
+            onDone = { r: SolveResult -> doneCount.incrementAndGet(); doneRef.set(r) },
+        )
+
+        val delivered = pumpUntilDone(worker, doneRef, timeoutMs = 15_000)
+        assertTrue(delivered, "Run 2's result should be delivered")
+
+        // Keep pumping: a stale Run 1 result (older generation) must never be delivered.
+        repeat(50) { worker.pump(); Thread.sleep(2) }
+
+        // The generation guard must deliver exactly one result, and it must be Run 2's. Run 2 (current
+        // generation, pumped frequently) runs to a normal terminal status; only a superseded run
+        // (Run 1, cancelled by the generation bump) would carry CANCELLED. So a non-CANCELLED status
+        // proves the delivered result is Run 2's and the stale Run 1 result was discarded.
+        assertEquals(1, doneCount.get(), "exactly one onDone — the stale Run 1 result is discarded")
+        assertNotEquals(
+            SolverStatus.CANCELLED,
+            doneRef.get()!!.status,
+            "the delivered result must be Run 2's (completed), not the superseded Run 1's CANCELLED",
+        )
+    }
 }
