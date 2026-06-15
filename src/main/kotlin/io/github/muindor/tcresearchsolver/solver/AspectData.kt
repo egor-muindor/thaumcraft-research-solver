@@ -9,7 +9,10 @@ class AspectData(
     val translate: Map<Aspect, String>,                // LinkedHashMap
     val adjacency: Map<Aspect, Set<Aspect>>,           // LinkedHashMap of LinkedHashSet
     val order: List<Aspect>,
-)
+) {
+    // Per-instance memo for primalVec; matches WeakMap semantics — cache is GC'd with the instance (G7).
+    internal val primalVecCache: HashMap<Aspect, Map<Aspect, Int>> = HashMap()
+}
 
 class AspectDataError(message: String) : RuntimeException(message)
 
