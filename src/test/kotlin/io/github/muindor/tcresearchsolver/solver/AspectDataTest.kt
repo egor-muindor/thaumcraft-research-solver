@@ -1,7 +1,9 @@
 package io.github.muindor.tcresearchsolver.solver
 
+import com.google.gson.JsonParser
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.io.File
 
 // Canonical undirected edge set (each edge endpoints sorted, list sorted). Extracted directly
 // from the GTNH 2.8.4 mod jars by scripts/extract-aspects.mjs; frozen as the normative fixture
@@ -206,5 +208,56 @@ class AspectDataTest {
             ))
         }
         assertTrue(ex.message?.contains("untranslated") == true)
+    }
+
+    // --- golden cross-check: Kotlin buildAspectData() must equal the TS oracle dump ---
+
+    @Test fun `golden order equals oracle aspect-data json`() {
+        val data = buildAspectData()
+        val json = JsonParser.parseString(File("src/test/resources/golden/aspect-data.json").readText()).asJsonObject
+        val oracleOrder = json.getAsJsonArray("order").map { it.asString }
+        assertEquals(oracleOrder, data.order, "aspect order must match TS oracle")
+    }
+
+    @Test fun `golden universe equals oracle aspect-data json`() {
+        val data = buildAspectData()
+        val json = JsonParser.parseString(File("src/test/resources/golden/aspect-data.json").readText()).asJsonObject
+        val oracleUniverse = json.getAsJsonArray("universe").map { it.asString }
+        assertEquals(oracleUniverse, data.universe.toList(), "universe (insertion order) must match TS oracle")
+    }
+
+    @Test fun `golden combinations equal oracle aspect-data json`() {
+        val data = buildAspectData()
+        val json = JsonParser.parseString(File("src/test/resources/golden/aspect-data.json").readText()).asJsonObject
+        val oracleCombos = json.getAsJsonObject("combinations")
+        // Check same keys in same order
+        val oracleKeys = oracleCombos.keySet().toList()
+        assertEquals(oracleKeys, data.combinations.keys.toList(), "combination keys (order) must match TS oracle")
+        // Check same component pairs
+        for (key in oracleKeys) {
+            val arr = oracleCombos.getAsJsonArray(key)
+            val oracleC1 = arr[0].asString
+            val oracleC2 = arr[1].asString
+            val actual = data.combinations[key]!!
+            assertEquals(oracleC1, actual.first, "combinations[$key].first")
+            assertEquals(oracleC2, actual.second, "combinations[$key].second")
+        }
+    }
+
+    @Test fun `golden primals equal oracle aspect-data json`() {
+        val data = buildAspectData()
+        val json = JsonParser.parseString(File("src/test/resources/golden/aspect-data.json").readText()).asJsonObject
+        val oraclePrimals = json.getAsJsonArray("primals").map { it.asString }.toSet()
+        assertEquals(oraclePrimals, data.primals, "primals must match TS oracle")
+    }
+
+    @Test fun `golden translate equals oracle aspect-data json`() {
+        val data = buildAspectData()
+        val json = JsonParser.parseString(File("src/test/resources/golden/aspect-data.json").readText()).asJsonObject
+        val oracleTranslate = json.getAsJsonObject("translate")
+        assertEquals(oracleTranslate.keySet().toSet(), data.translate.keys.toSet(), "translate key set must match TS oracle")
+        for (key in oracleTranslate.keySet()) {
+            assertEquals(oracleTranslate.get(key).asString, data.translate[key], "translate[$key]")
+        }
     }
 }

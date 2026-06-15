@@ -1,0 +1,514 @@
+{
+  "scenarios": [
+    {
+      "name": "r2_air_entropy_bridge",
+      "radius": 2,
+      "cells": [
+        {
+          "key": "0,0",
+          "state": "ANCHOR",
+          "aspect": "air"
+        },
+        {
+          "key": "2,0",
+          "state": "ANCHOR",
+          "aspect": "entropy"
+        }
+      ],
+      "inv": "rich",
+      "maxNodes": 2000000
+    },
+    {
+      "name": "r2_two_anchor",
+      "radius": 2,
+      "cells": [
+        {
+          "key": "-1,0",
+          "state": "ANCHOR",
+          "aspect": "air"
+        },
+        {
+          "key": "1,0",
+          "state": "ANCHOR",
+          "aspect": "entropy"
+        }
+      ],
+      "inv": "rich",
+      "maxNodes": 2000000
+    },
+    {
+      "name": "r2_dead_center",
+      "radius": 2,
+      "cells": [
+        {
+          "key": "-1,0",
+          "state": "ANCHOR",
+          "aspect": "air"
+        },
+        {
+          "key": "1,0",
+          "state": "ANCHOR",
+          "aspect": "entropy"
+        },
+        {
+          "key": "0,0",
+          "state": "DEAD"
+        }
+      ],
+      "inv": "rich",
+      "maxNodes": 2000000
+    },
+    {
+      "name": "r3_three_anchor",
+      "radius": 3,
+      "cells": [
+        {
+          "key": "-2,0",
+          "state": "ANCHOR",
+          "aspect": "air"
+        },
+        {
+          "key": "2,0",
+          "state": "ANCHOR",
+          "aspect": "entropy"
+        },
+        {
+          "key": "0,2",
+          "state": "ANCHOR",
+          "aspect": "fire"
+        }
+      ],
+      "inv": "rich",
+      "maxNodes": 4000000
+    },
+    {
+      "name": "r2_void_zero_supply",
+      "radius": 2,
+      "cells": [
+        {
+          "key": "-1,0",
+          "state": "ANCHOR",
+          "aspect": "air"
+        },
+        {
+          "key": "1,0",
+          "state": "ANCHOR",
+          "aspect": "entropy"
+        }
+      ],
+      "inv": {
+        "air": 100,
+        "earth": 100,
+        "fire": 100,
+        "water": 100,
+        "order": 100,
+        "entropy": 100,
+        "lust": 100,
+        "nether": 100,
+        "pride": 100,
+        "gluttony": 100,
+        "envy": 100,
+        "sloth": 100,
+        "wrath": 100,
+        "time": 100,
+        "stupidity": 100,
+        "cheatiness": 100,
+        "electricity": 100,
+        "magnetism": 100,
+        "radioactivity": 100,
+        "aequalitas": 100,
+        "vesania": 100,
+        "primordium": 100,
+        "astrum": 100,
+        "gloria": 100,
+        "caelum": 100,
+        "tabernus": 100,
+        "terminus": 100,
+        "void": 0,
+        "light": 100,
+        "weather": 100,
+        "motion": 100,
+        "cold": 100,
+        "crystal": 100,
+        "life": 100,
+        "poison": 100,
+        "energy": 100,
+        "exchange": 100,
+        "metal": 100,
+        "death": 100,
+        "flight": 100,
+        "darkness": 100,
+        "soul": 100,
+        "heal": 100,
+        "travel": 100,
+        "eldritch": 100,
+        "magic": 100,
+        "aura": 100,
+        "taint": 100,
+        "slime": 100,
+        "plant": 100,
+        "tree": 100,
+        "beast": 100,
+        "flesh": 100,
+        "undead": 100,
+        "mind": 100,
+        "senses": 100,
+        "man": 100,
+        "crop": 100,
+        "mine": 100,
+        "tool": 100,
+        "harvest": 100,
+        "weapon": 100,
+        "armor": 100,
+        "hunger": 100,
+        "greed": 100,
+        "craft": 100,
+        "cloth": 100,
+        "mechanism": 100,
+        "trap": 100
+      },
+      "maxNodes": 2000000
+    },
+    {
+      "name": "r2_infeasible_void_bridge",
+      "radius": 2,
+      "cells": [
+        {
+          "key": "0,0",
+          "state": "ANCHOR",
+          "aspect": "air"
+        },
+        {
+          "key": "2,0",
+          "state": "ANCHOR",
+          "aspect": "entropy"
+        },
+        {
+          "key": "-2,0",
+          "state": "DEAD"
+        },
+        {
+          "key": "-2,1",
+          "state": "DEAD"
+        },
+        {
+          "key": "-2,2",
+          "state": "DEAD"
+        },
+        {
+          "key": "-1,-1",
+          "state": "DEAD"
+        },
+        {
+          "key": "-1,0",
+          "state": "DEAD"
+        },
+        {
+          "key": "-1,1",
+          "state": "DEAD"
+        },
+        {
+          "key": "-1,2",
+          "state": "DEAD"
+        },
+        {
+          "key": "0,-2",
+          "state": "DEAD"
+        },
+        {
+          "key": "0,-1",
+          "state": "DEAD"
+        },
+        {
+          "key": "0,1",
+          "state": "DEAD"
+        },
+        {
+          "key": "0,2",
+          "state": "DEAD"
+        },
+        {
+          "key": "1,-2",
+          "state": "DEAD"
+        },
+        {
+          "key": "1,-1",
+          "state": "DEAD"
+        },
+        {
+          "key": "1,1",
+          "state": "DEAD"
+        },
+        {
+          "key": "2,-2",
+          "state": "DEAD"
+        },
+        {
+          "key": "2,-1",
+          "state": "DEAD"
+        }
+      ],
+      "inv": {
+        "air": 0,
+        "earth": 0,
+        "fire": 0,
+        "water": 0,
+        "order": 0,
+        "entropy": 0,
+        "lust": 0,
+        "nether": 0,
+        "pride": 0,
+        "gluttony": 0,
+        "envy": 0,
+        "sloth": 0,
+        "wrath": 0,
+        "time": 0,
+        "stupidity": 0,
+        "cheatiness": 0,
+        "electricity": 0,
+        "magnetism": 0,
+        "radioactivity": 0,
+        "aequalitas": 0,
+        "vesania": 0,
+        "primordium": 0,
+        "astrum": 0,
+        "gloria": 0,
+        "caelum": 0,
+        "tabernus": 0,
+        "terminus": 0,
+        "void": 0,
+        "light": 0,
+        "weather": 0,
+        "motion": 0,
+        "cold": 0,
+        "crystal": 0,
+        "life": 0,
+        "poison": 0,
+        "energy": 0,
+        "exchange": 0,
+        "metal": 0,
+        "death": 0,
+        "flight": 0,
+        "darkness": 0,
+        "soul": 0,
+        "heal": 0,
+        "travel": 0,
+        "eldritch": 0,
+        "magic": 0,
+        "aura": 0,
+        "taint": 0,
+        "slime": 0,
+        "plant": 0,
+        "tree": 0,
+        "beast": 0,
+        "flesh": 0,
+        "undead": 0,
+        "mind": 0,
+        "senses": 0,
+        "man": 0,
+        "crop": 0,
+        "mine": 0,
+        "tool": 0,
+        "harvest": 0,
+        "weapon": 0,
+        "armor": 0,
+        "hunger": 0,
+        "greed": 0,
+        "craft": 0,
+        "cloth": 0,
+        "mechanism": 0,
+        "trap": 0
+      },
+      "maxNodes": 200000
+    },
+    {
+      "name": "r2_scarce_void_bridge",
+      "radius": 2,
+      "cells": [
+        {
+          "key": "0,0",
+          "state": "ANCHOR",
+          "aspect": "air"
+        },
+        {
+          "key": "2,0",
+          "state": "ANCHOR",
+          "aspect": "entropy"
+        },
+        {
+          "key": "-2,0",
+          "state": "DEAD"
+        },
+        {
+          "key": "-2,1",
+          "state": "DEAD"
+        },
+        {
+          "key": "-2,2",
+          "state": "DEAD"
+        },
+        {
+          "key": "-1,-1",
+          "state": "DEAD"
+        },
+        {
+          "key": "-1,0",
+          "state": "DEAD"
+        },
+        {
+          "key": "-1,1",
+          "state": "DEAD"
+        },
+        {
+          "key": "-1,2",
+          "state": "DEAD"
+        },
+        {
+          "key": "0,-2",
+          "state": "DEAD"
+        },
+        {
+          "key": "0,-1",
+          "state": "DEAD"
+        },
+        {
+          "key": "0,1",
+          "state": "DEAD"
+        },
+        {
+          "key": "0,2",
+          "state": "DEAD"
+        },
+        {
+          "key": "1,-2",
+          "state": "DEAD"
+        },
+        {
+          "key": "1,-1",
+          "state": "DEAD"
+        },
+        {
+          "key": "1,1",
+          "state": "DEAD"
+        },
+        {
+          "key": "2,-2",
+          "state": "DEAD"
+        },
+        {
+          "key": "2,-1",
+          "state": "DEAD"
+        }
+      ],
+      "inv": {
+        "air": 0,
+        "earth": 0,
+        "fire": 0,
+        "water": 0,
+        "order": 0,
+        "entropy": 0,
+        "lust": 0,
+        "nether": 0,
+        "pride": 0,
+        "gluttony": 0,
+        "envy": 0,
+        "sloth": 0,
+        "wrath": 0,
+        "time": 0,
+        "stupidity": 0,
+        "cheatiness": 0,
+        "electricity": 0,
+        "magnetism": 0,
+        "radioactivity": 0,
+        "aequalitas": 0,
+        "vesania": 0,
+        "primordium": 0,
+        "astrum": 0,
+        "gloria": 0,
+        "caelum": 0,
+        "tabernus": 0,
+        "terminus": 0,
+        "void": 1,
+        "light": 0,
+        "weather": 0,
+        "motion": 0,
+        "cold": 0,
+        "crystal": 0,
+        "life": 0,
+        "poison": 0,
+        "energy": 0,
+        "exchange": 0,
+        "metal": 0,
+        "death": 0,
+        "flight": 0,
+        "darkness": 0,
+        "soul": 0,
+        "heal": 0,
+        "travel": 0,
+        "eldritch": 0,
+        "magic": 0,
+        "aura": 0,
+        "taint": 0,
+        "slime": 0,
+        "plant": 0,
+        "tree": 0,
+        "beast": 0,
+        "flesh": 0,
+        "undead": 0,
+        "mind": 0,
+        "senses": 0,
+        "man": 0,
+        "crop": 0,
+        "mine": 0,
+        "tool": 0,
+        "harvest": 0,
+        "weapon": 0,
+        "armor": 0,
+        "hunger": 0,
+        "greed": 0,
+        "craft": 0,
+        "cloth": 0,
+        "mechanism": 0,
+        "trap": 0
+      },
+      "maxNodes": 200000
+    }
+  ],
+  "results": {
+    "r2_air_entropy_bridge": {
+      "status": "OPTIMAL",
+      "scarcity": 0,
+      "cells": 1
+    },
+    "r2_two_anchor": {
+      "status": "OPTIMAL",
+      "scarcity": 0,
+      "cells": 1
+    },
+    "r2_dead_center": {
+      "status": "OPTIMAL",
+      "scarcity": 0,
+      "cells": 2
+    },
+    "r3_three_anchor": {
+      "status": "OPTIMAL",
+      "scarcity": 0,
+      "cells": 4
+    },
+    "r2_void_zero_supply": {
+      "status": "OPTIMAL",
+      "scarcity": 0,
+      "cells": 1
+    },
+    "r2_infeasible_void_bridge": {
+      "status": "INFEASIBLE_INVENTORY",
+      "scarcity": "inf",
+      "cells": null
+    },
+    "r2_scarce_void_bridge": {
+      "status": "OPTIMAL",
+      "scarcity": 50,
+      "cells": 1
+    }
+  }
+}

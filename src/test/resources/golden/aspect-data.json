@@ -1,0 +1,477 @@
+{
+  "primals": [
+    "air",
+    "earth",
+    "fire",
+    "water",
+    "order",
+    "entropy"
+  ],
+  "order": [
+    "air",
+    "earth",
+    "fire",
+    "water",
+    "order",
+    "entropy",
+    "void",
+    "light",
+    "weather",
+    "motion",
+    "cold",
+    "crystal",
+    "life",
+    "poison",
+    "energy",
+    "exchange",
+    "metal",
+    "death",
+    "flight",
+    "darkness",
+    "soul",
+    "heal",
+    "travel",
+    "eldritch",
+    "magic",
+    "aura",
+    "taint",
+    "slime",
+    "plant",
+    "tree",
+    "beast",
+    "flesh",
+    "undead",
+    "mind",
+    "senses",
+    "man",
+    "crop",
+    "mine",
+    "tool",
+    "harvest",
+    "weapon",
+    "armor",
+    "hunger",
+    "greed",
+    "craft",
+    "cloth",
+    "mechanism",
+    "trap",
+    "lust",
+    "nether",
+    "pride",
+    "gluttony",
+    "envy",
+    "sloth",
+    "wrath",
+    "time",
+    "stupidity",
+    "cheatiness",
+    "electricity",
+    "magnetism",
+    "radioactivity",
+    "aequalitas",
+    "vesania",
+    "primordium",
+    "astrum",
+    "gloria",
+    "caelum",
+    "tabernus",
+    "terminus"
+  ],
+  "universe": [
+    "air",
+    "earth",
+    "fire",
+    "water",
+    "order",
+    "entropy",
+    "lust",
+    "nether",
+    "pride",
+    "gluttony",
+    "envy",
+    "sloth",
+    "wrath",
+    "time",
+    "stupidity",
+    "cheatiness",
+    "electricity",
+    "magnetism",
+    "radioactivity",
+    "aequalitas",
+    "vesania",
+    "primordium",
+    "astrum",
+    "gloria",
+    "caelum",
+    "tabernus",
+    "terminus",
+    "void",
+    "light",
+    "weather",
+    "motion",
+    "cold",
+    "crystal",
+    "life",
+    "poison",
+    "energy",
+    "exchange",
+    "metal",
+    "death",
+    "flight",
+    "darkness",
+    "soul",
+    "heal",
+    "travel",
+    "eldritch",
+    "magic",
+    "aura",
+    "taint",
+    "slime",
+    "plant",
+    "tree",
+    "beast",
+    "flesh",
+    "undead",
+    "mind",
+    "senses",
+    "man",
+    "crop",
+    "mine",
+    "tool",
+    "harvest",
+    "weapon",
+    "armor",
+    "hunger",
+    "greed",
+    "craft",
+    "cloth",
+    "mechanism",
+    "trap"
+  ],
+  "combinations": {
+    "void": [
+      "air",
+      "entropy"
+    ],
+    "light": [
+      "air",
+      "fire"
+    ],
+    "weather": [
+      "air",
+      "water"
+    ],
+    "motion": [
+      "air",
+      "order"
+    ],
+    "cold": [
+      "fire",
+      "entropy"
+    ],
+    "crystal": [
+      "earth",
+      "order"
+    ],
+    "life": [
+      "water",
+      "earth"
+    ],
+    "poison": [
+      "water",
+      "entropy"
+    ],
+    "energy": [
+      "order",
+      "fire"
+    ],
+    "exchange": [
+      "entropy",
+      "order"
+    ],
+    "metal": [
+      "earth",
+      "crystal"
+    ],
+    "death": [
+      "life",
+      "entropy"
+    ],
+    "flight": [
+      "air",
+      "motion"
+    ],
+    "darkness": [
+      "void",
+      "light"
+    ],
+    "soul": [
+      "life",
+      "death"
+    ],
+    "heal": [
+      "life",
+      "order"
+    ],
+    "travel": [
+      "motion",
+      "earth"
+    ],
+    "eldritch": [
+      "void",
+      "darkness"
+    ],
+    "magic": [
+      "void",
+      "energy"
+    ],
+    "aura": [
+      "magic",
+      "air"
+    ],
+    "taint": [
+      "magic",
+      "entropy"
+    ],
+    "slime": [
+      "life",
+      "water"
+    ],
+    "plant": [
+      "life",
+      "earth"
+    ],
+    "tree": [
+      "air",
+      "plant"
+    ],
+    "beast": [
+      "motion",
+      "life"
+    ],
+    "flesh": [
+      "death",
+      "beast"
+    ],
+    "undead": [
+      "motion",
+      "death"
+    ],
+    "mind": [
+      "fire",
+      "soul"
+    ],
+    "senses": [
+      "air",
+      "soul"
+    ],
+    "man": [
+      "beast",
+      "mind"
+    ],
+    "crop": [
+      "plant",
+      "man"
+    ],
+    "mine": [
+      "man",
+      "earth"
+    ],
+    "tool": [
+      "man",
+      "order"
+    ],
+    "harvest": [
+      "crop",
+      "tool"
+    ],
+    "weapon": [
+      "tool",
+      "fire"
+    ],
+    "armor": [
+      "tool",
+      "earth"
+    ],
+    "hunger": [
+      "life",
+      "void"
+    ],
+    "greed": [
+      "man",
+      "hunger"
+    ],
+    "craft": [
+      "man",
+      "tool"
+    ],
+    "cloth": [
+      "tool",
+      "beast"
+    ],
+    "mechanism": [
+      "motion",
+      "tool"
+    ],
+    "trap": [
+      "motion",
+      "entropy"
+    ],
+    "lust": [
+      "flesh",
+      "hunger"
+    ],
+    "nether": [
+      "fire",
+      "magic"
+    ],
+    "pride": [
+      "flight",
+      "void"
+    ],
+    "gluttony": [
+      "hunger",
+      "void"
+    ],
+    "envy": [
+      "senses",
+      "hunger"
+    ],
+    "sloth": [
+      "trap",
+      "soul"
+    ],
+    "wrath": [
+      "weapon",
+      "fire"
+    ],
+    "time": [
+      "void",
+      "order"
+    ],
+    "stupidity": [
+      "mind",
+      "entropy"
+    ],
+    "cheatiness": [
+      "mine",
+      "greed"
+    ],
+    "electricity": [
+      "energy",
+      "mechanism"
+    ],
+    "magnetism": [
+      "metal",
+      "travel"
+    ],
+    "radioactivity": [
+      "light",
+      "energy"
+    ],
+    "aequalitas": [
+      "mind",
+      "order"
+    ],
+    "vesania": [
+      "mind",
+      "taint"
+    ],
+    "primordium": [
+      "void",
+      "motion"
+    ],
+    "astrum": [
+      "light",
+      "primordium"
+    ],
+    "gloria": [
+      "man",
+      "travel"
+    ],
+    "caelum": [
+      "crystal",
+      "metal"
+    ],
+    "tabernus": [
+      "armor",
+      "travel"
+    ],
+    "terminus": [
+      "greed",
+      "eldritch"
+    ]
+  },
+  "translate": {
+    "air": "aer",
+    "earth": "terra",
+    "fire": "ignis",
+    "water": "aqua",
+    "order": "ordo",
+    "entropy": "perditio",
+    "lust": "luxuria",
+    "nether": "infernus",
+    "pride": "superbia",
+    "gluttony": "gula",
+    "envy": "invidia",
+    "sloth": "desidia",
+    "wrath": "ira",
+    "time": "tempus",
+    "stupidity": "strontio",
+    "cheatiness": "nebrisum",
+    "electricity": "electrum",
+    "magnetism": "magneto",
+    "radioactivity": "radio",
+    "aequalitas": "aequalitas",
+    "vesania": "vesania",
+    "primordium": "primordium",
+    "astrum": "astrum",
+    "gloria": "gloria",
+    "caelum": "caelum",
+    "tabernus": "tabernus",
+    "terminus": "terminus",
+    "void": "vacuos",
+    "light": "lux",
+    "weather": "tempestas",
+    "motion": "motus",
+    "cold": "gelum",
+    "crystal": "vitreus",
+    "life": "victus",
+    "poison": "venenum",
+    "energy": "potentia",
+    "exchange": "permutatio",
+    "metal": "metallum",
+    "death": "mortuus",
+    "flight": "volatus",
+    "darkness": "tenebrae",
+    "soul": "spiritus",
+    "heal": "sano",
+    "travel": "iter",
+    "eldritch": "alienis",
+    "magic": "praecantatio",
+    "aura": "auram",
+    "taint": "vitium",
+    "slime": "limus",
+    "plant": "herba",
+    "tree": "arbor",
+    "beast": "bestia",
+    "flesh": "corpus",
+    "undead": "exanimis",
+    "mind": "cognitio",
+    "senses": "sensus",
+    "man": "humanus",
+    "crop": "messis",
+    "mine": "perfodio",
+    "tool": "instrumentum",
+    "harvest": "meto",
+    "weapon": "telum",
+    "armor": "tutamen",
+    "hunger": "fames",
+    "greed": "lucrum",
+    "craft": "fabrico",
+    "cloth": "pannus",
+    "mechanism": "machina",
+    "trap": "vinculum"
+  }
+}
