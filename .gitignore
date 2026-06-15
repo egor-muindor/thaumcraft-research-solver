@@ -21,3 +21,18 @@ bin/
 
 # OS
 .DS_Store
+
+# GTNH dev-client / runClient runtime artifacts
+/run/
+/config/
+/crash-reports/
+/logs/
+/saves/
+options.txt
+usernamecache.json
+.factorypath
+addon.local.gradle
+addon.local.gradle.kts
+addon.late.local.gradle
+addon.late.local.gradle.kts
+layout.json

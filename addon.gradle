@@ -1,0 +1,25 @@
+// Kotlin (Forgelin provides the runtime in-game; the build needs the compiler).
+// kapt runs the Mixin annotation processor over Kotlin mixins (none yet in Phase 1).
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'org.jetbrains.kotlin.kapt'
+
+afterEvaluate {
+    // Gradle 9 strict validation: reobfJar reads build/tmp/mixins/mixins.srg which kapt
+    // also touches; declare ordering to satisfy the implicit-dependency check. (Mirrors
+    // ThaumcraftResearchTweaks' addon.gradle — the canonical Kotlin+mixins GTNH setup.)
+    tasks.named('reobfJar').configure {
+        mustRunAfter 'kaptTestKotlin'
+    }
+
+    // RFG doesn't configure useJUnitPlatform(); without it Gradle 9 uses the JUnit 4
+    // runner, can't discover the JUnit 5 solver tests, and fails on failOnNoDiscoveredTests.
+    tasks.named('test').configure {
+        useJUnitPlatform {
+            excludeTags 'bench'
+        }
+        testLogging {
+            events 'passed', 'failed', 'skipped'
+            exceptionFormat 'full'
+        }
+    }
+}

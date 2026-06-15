@@ -1,28 +1,3 @@
-// TEMPORARY plain Kotlin/JVM build — compiles and tests the MC-free `solver` package only.
-// Runs on the project-local JDK 17 (see gradle.properties: org.gradle.java.home).
-// Phase 1 of the implementation plan replaces this with the GTNH `gtnhconvention` plugin and
-// folds these same solver sources into the real mod (adding the integration/ui/mixin code).
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '2.0.21'
-}
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    testImplementation platform('org.junit:junit-bom:5.10.2')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testImplementation 'com.google.code.gson:gson:2.10.1'
-}
-
-test {
-    useJUnitPlatform {
-        excludeTags 'bench'
-    }
-    testLogging {
-        events 'passed', 'failed', 'skipped'
-        exceptionFormat 'full'
-    }
+    id 'com.gtnewhorizons.gtnhconvention'
 }

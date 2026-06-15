@@ -1,0 +1,5 @@
+// Thaumcraft + ResearchTweaks + UniMixins resolve from the GTNH convention's default
+// repositories (GTNH Maven + well-known 1.7.10 repos). No extra repositories needed —
+// mirrors ThaumcraftResearchTweaks' empty repositories.gradle.
+repositories {
+}
