@@ -15,3 +15,33 @@ ThaumcraftResearchTweaks, the canonical Kotlin+Thaumcraft+mixins GTNH mod).
   PrismLauncher `GT_New_Horizons_2.8.4_Java_17-25` instance. Game launches, mod
   appears in the FML mod list, research table opens the ResearchTweaks GUI, no
   crash / no missing-dependency error. (No UI buttons yet — that is Phase 4.)
+
+## 2026-06-15 — Phase 3 (integration adapters) complete
+
+The `integration/` layer that bridges live TC/RT state ↔ the pure solver. TDD
+per file (pure logic unit-tested; TC/RT-touching code isolated below a clear
+boundary, compiled against the deobf classpath, runClient-verified in Phase 5).
+
+- **Task 3.1 — signatures pinned** (`javap`): recorded a CONFIRMED SIGNATURES
+  section in `reference/{thaumcraft-integration,researchtweaks-map}.md`.
+  Corrections vs prior guesses: `ResearchNoteData` is in `…lib.research` (the
+  `…lib.utils.HexUtils` is the canonical one); packets in `…network.playerdata`;
+  RT lives under `elan.tweaks.thaumcraft.research.frontend.…`. `HexEntry.type`
+  ints: VACANT=0, ROOT=1, NODE=2.
+- **3.2 AspectDataProvider** — `buildAspectDataFrom(registry entries)` mirrors
+  the static `buildAspectData`; `fromLiveRegistry()` reads `Aspect.aspects`.
+- **3.3 BoardReader** — `ResearchNoteData.hexes/hexEntries` → solver `Board`
+  (ROOT→Anchor, NODE→Placed(locked), off-shape→Dead); radius from hex extent.
+- **3.4 InventoryReader** — RT `AspectPool.totalAmountOf` (personal+bonus) per
+  `data.universe`, gated by `hasDiscovered` → solver `Inventory`.
+- **3.5 Applier** — pure `planApply` (direct-draw-first, deepest-first Combine
+  emission, hexKey-ordered Place ops) + packet execution + `postVerify`.
+- **Review (Opus + Codex):** Codex caught a HIGH bug — `apply` hard-coded the
+  combine packet's `ab1/ab2=false`, but the server gate is
+  `getAspectPoolFor(a) > 0 || abN` and draws bonus-pool components only when
+  `abN` is set. Since the inventory uses `totalAmountOf` (incl. bonus), fixed to
+  mirror RT's `AspectCombinerAdapter`: `abN = tile.bonusAspects.getAmount(a) > 0`
+  (verified via `javap -c`). Added contention regression tests.
+- Build: `./gradlew build` green on JDK 25; **169 tests, 0 failures**. Production
+  reobf jar assembles. No runtime change yet (integration is dead code until the
+  Phase 4 Mixin wires it), so no new PrismLauncher smoke this phase.
