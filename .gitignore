@@ -1,0 +1,19 @@
+# Large binary mod jars kept locally for inspection (javap / decompile), not committed.
+/reference/jars/
+
+# Gradle / build
+.gradle/
+build/
+out/
+*.classpath
+*.project
+
+# IntelliJ / Eclipse
+.idea/
+*.iml
+*.ipr
+*.iws
+bin/
+
+# OS
+.DS_Store
