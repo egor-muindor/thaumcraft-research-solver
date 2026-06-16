@@ -113,17 +113,21 @@ object BoardReader {
      * a `ResearchNoteData` read directly from the tile (no ItemStack indirection).
      */
     fun fromNoteData(noteData: thaumcraft.common.lib.research.ResearchNoteData): Board {
-        // noteHexes: "q,r" → Pair(q, r)
-        val noteHexes: Map<String, Pair<Int, Int>> = noteData.hexes.mapValues { (_, h) ->
-            Pair(h.q, h.r)
-        }
-
-        // entries: "q,r" → NoteEntry
-        val entries: Map<String, NoteEntry> = noteData.hexEntries.mapValues { (_, e) ->
-            NoteEntry(
-                aspectTag = e.aspect?.tag,
-                type = hexTypeOf(e.type),
-            )
+        // TC keys both maps by HexUtils.Hex.toString() == "q:r" (COLON). The solver — and
+        // toBoard's internal shape test hexKey(h) — use "q,r" (COMMA). Re-key both maps to the
+        // solver format here, or toBoard treats every cell as off-shape (Dead) and the VACANT
+        // cells never become Empty (observed runtime bug: anchors=4 empties=0 on a fresh note).
+        val noteHexes = LinkedHashMap<String, Pair<Int, Int>>()
+        val entries = LinkedHashMap<String, NoteEntry>()
+        for ((rawKey, h) in noteData.hexes) {
+            val key = hexKey(Hex(h.q, h.r))
+            noteHexes[key] = Pair(h.q, h.r)
+            noteData.hexEntries[rawKey]?.let { e ->
+                entries[key] = NoteEntry(
+                    aspectTag = e.aspect?.tag,
+                    type = hexTypeOf(e.type),
+                )
+            }
         }
 
         // radius = max axial distance from origin to any note hex

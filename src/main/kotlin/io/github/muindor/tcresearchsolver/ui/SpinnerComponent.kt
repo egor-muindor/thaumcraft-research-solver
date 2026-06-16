@@ -1,9 +1,8 @@
 package io.github.muindor.tcresearchsolver.ui
 
-import elan.tweaks.common.gui.component.ForegroundUIComponent
+import elan.tweaks.common.gui.component.BackgroundUIComponent
 import elan.tweaks.common.gui.component.TickingUIComponent
 import elan.tweaks.common.gui.component.UIContext
-import elan.tweaks.common.gui.dto.Scale
 import elan.tweaks.common.gui.dto.VectorXY
 
 /**
@@ -13,7 +12,7 @@ import elan.tweaks.common.gui.dto.VectorXY
 class SpinnerComponent(
     private val origin: VectorXY,
     private val controller: SolveController,
-) : ForegroundUIComponent, TickingUIComponent {
+) : BackgroundUIComponent, TickingUIComponent {
 
     private val frames = charArrayOf('|', '/', '-', '\\')
     private var tickCounter = 0
@@ -29,7 +28,7 @@ class SpinnerComponent(
         if (++tickCounter % 3 == 0) frame = (frame + 1) % frames.size
     }
 
-    override fun onDrawForeground(mouse: VectorXY, scale: Scale, ctx: UIContext) {
+    override fun onDrawBackground(mouse: VectorXY, partialTicks: Float, ctx: UIContext) {
         if (controller.state !is SolveState.Solving) return   // invisible unless solving
         val text = "${frames[frame]} " + (controller.progressText() ?: "Solving…")
         ctx.drawWithShadow(text, origin)

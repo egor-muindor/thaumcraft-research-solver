@@ -45,6 +45,18 @@ val DEFAULT_BUDGETS: Map<Int, SolveBudget> = mapOf(
 
 fun budgetForRadius(radius: Int): SolveBudget = DEFAULT_BUDGETS[radius] ?: DEFAULT_BUDGETS.getValue(5)
 
+/**
+ * Resolves the effective solve budget from the built-in per-radius [base] and the user config:
+ *  - [perRadiusMs] (> 0) overrides the built-in time for this radius; 0 = keep built-in.
+ *  - [globalCapMs] (> 0) is a ceiling applied on top (a true `min`), never raising the time.
+ * `maxNodes` and `beam` are always carried over from [base].
+ */
+fun resolveBudget(base: SolveBudget, perRadiusMs: Int, globalCapMs: Int): SolveBudget {
+    val sizeMs: Long = if (perRadiusMs > 0) perRadiusMs.toLong() else base.maxTimeMs
+    val effectiveMs: Long = if (globalCapMs > 0) minOf(globalCapMs.toLong(), sizeMs) else sizeMs
+    return if (effectiveMs == base.maxTimeMs) base else SolveBudget(base.maxNodes, effectiveMs, base.beam)
+}
+
 class SolveOptions(
     val data: AspectData,
     val board: Board,          // initial anchors + locked (pre-validated by caller)
@@ -52,6 +64,7 @@ class SolveOptions(
     val budget: SolveBudget,
     val allocBudget: AllocBudget = AllocBudget(),
     val seed: Boolean = false, // enable the optional anytime seed; default off
+    val stopAtFirstFeasible: Boolean = false, // fast mode: return the first valid solution; default off
     val onProgress: ((Progress) -> Unit)? = null,
     val shouldCancel: (() -> Boolean)? = null,
     val now: () -> Long = { System.currentTimeMillis() },
@@ -163,6 +176,7 @@ fun solve(opts: SolveOptions): SolveResult {
     var nodes = 0
     var cancelled = false
     var truncated = false // budget/beam hit before exhaustion
+    var stopEarly = false // fast mode: first feasible incumbent found, abandon the rest of the search
 
     val placedCost = fun(): Cost {
         var scarcity = 0.0
@@ -226,6 +240,7 @@ fun solve(opts: SolveOptions): SolveResult {
             if (incumbent == null || lessThan(cost, incumbent!!.cost)) {
                 incumbent = Incumbent(cloneBoard(work), cost, alloc)
             }
+            if (opts.stopAtFirstFeasible) stopEarly = true // fast mode: a valid solution is enough
         } else if (alloc.feasible == Feasible.UNKNOWN) {
             // Allocator budget exhausted for this board: feasibility unproven. Record that a competitive
             // unknown exists — this BLOCKS proof statuses (OPTIMAL/INFEASIBLE_INVENTORY degrade to *_TIMEOUT),
@@ -239,7 +254,7 @@ fun solve(opts: SolveOptions): SolveResult {
     // DFS with include/exclude branching (complete); periodic cancel/budget/progress checks.
     // Defined as a recursive local function to mirror the TS closure.
     fun dfs() {
-        if (cancelled) return
+        if (cancelled || stopEarly) return
         if (nodes >= budget.maxNodes) { truncated = true; return }
         if ((nodes and 1023) == 0) {
             if (opts.shouldCancel?.invoke() == true) { cancelled = true; return }
@@ -260,6 +275,7 @@ fun solve(opts: SolveOptions): SolveResult {
         }
 
         if (fastAnchorsConnected()) onComplete() // invariant 3: keep searching past goals
+        if (stopEarly) return // fast mode: onComplete just recorded the first feasible incumbent
 
         val cell = nextUndecidedFrontierCell() ?: return // every frontier cell decided => leaf
 
@@ -287,7 +303,7 @@ fun solve(opts: SolveOptions): SolveResult {
             dfs()
             placements.removeAt(placements.lastIndex)
             setState(work, cell, CellState.Empty)
-            if (cancelled) return
+            if (cancelled || stopEarly) return
         }
 
         // (b) EXCLUDE: leave `cell` permanently EMPTY in this subtree (enables frontier-skipping optima)
@@ -311,10 +327,18 @@ fun solve(opts: SolveOptions): SolveResult {
         }
     }
 
-    dfs()
+    // Fast mode (stopAtFirstFeasible): if the seed already produced a feasible incumbent, skip the
+    // exhaustive DFS entirely (nodes stays 0). Otherwise run DFS, which self-aborts via `stopEarly`
+    // the moment onComplete records the first feasible incumbent.
+    if (opts.stopAtFirstFeasible && incumbent != null) {
+        stopEarly = true
+    } else {
+        dfs()
+    }
 
     val timeMs = now() - start
-    val exhaustive = !truncated && !cancelled
+    // stopEarly => the search was deliberately cut short, so optimality is NOT proven (never OPTIMAL).
+    val exhaustive = !truncated && !cancelled && !stopEarly
     val inc = incumbent // capture after DFS
 
     if (cancelled) {

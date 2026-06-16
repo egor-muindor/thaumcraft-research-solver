@@ -85,3 +85,87 @@ compile-verified and **runtime-validated at runClient (Phase 5.2 — pending)**.
    optimistic — needs a deferred re-read of `tile.data` after server sync).
 5. Ink-missing → Apply reports "scribing tools missing or empty" (abortReason → Error state).
 6. INFEASIBLE_INVENTORY path surfaces a useful message and returns to a usable state.
+
+## 2026-06-16 — Phase 5.2 runClient session (IN FLIGHT — uncommitted on `feat/implementation`)
+
+Live QA in the PrismLauncher GTNH instance surfaced four real integration bugs the 219 unit tests
+(fakes) could not catch, plus UI placement work. All fixed in the working tree (not yet committed);
+the deployed jar is `build/libs/tcresearchsolver-…-dirty.jar`. Investigations done by decompiling
+RT 1.3.0 + TC 4.2.3.5 with Vineflower (`/tmp/vineflower.jar` → `/tmp/rtvf`, `/tmp/tcvf`).
+
+**Bugs fixed (all verified live except where noted):**
+- **Note source** (`ui/LiveWiring.kt` `buildSnapshot`): read the note from the **slot-1 ItemStack**
+  via `ResearchManager.getData(tile.getStackInSlot(1))`, not `tile.data` (a server-only cache the
+  tile never network-serializes → null/stale on client; RT itself reads slot-1).
+- **Hex key format** (`integration/BoardReader.kt` `fromNoteData`): TC keys hexes by
+  `Hex.toString()` = `"q:r"` (colon); solver/`toBoard` use `hexKey()` = `"q,r"` (comma). Passing
+  colon keys made `toBoard` mark every cell Dead → VACANT cells never became Empty → `empties=0` →
+  Solve silently no-op. Fix: re-key both maps through `hexKey(Hex(q,r))`. *(This was THE button
+  "does nothing" root cause; the slot-1 change alone wasn't enough.)*
+- **Solver `UNKNOWN_TIMEOUT` on radius-4+** (`ui/SolveWorker.kt`): the greedy feasible-first seed
+  (`seedIncumbent`, unit-tested by `SolverSeedTest`) was disabled — `SolveOptions.seed` defaults
+  false and the worker never set it. Without an incumbent, B&B pruning never engages and large
+  boards find nothing. Fix: `seed = true`. R4 now returns OPTIMAL/FEASIBLE instead of nothing.
+- **Ghost overlay** (`ui/LiveWiring.kt` `HexPixelLayout`, `ui/GhostOverlayComponent.kt`,
+  `SpinnerComponent.kt`, mixin): (a) was reflecting RT's `ParchmentHexMapLayout.keyToHex` — wrong
+  map (decorative runes, colon keys, parchment-center-relative, omits `"0:0"`). Replaced with RT's
+  real formula `HexMath.toCenterVector(q,r,9) + centerUiOrigin(171,110)`, `origin = center-8`.
+  (b) ghost+spinner were **Foreground** components → RT's foreground pass double-offsets
+  (vanilla `glTranslate(guiLeft,guiTop)` + TableUIContext re-adds origin); moved to **Background**.
+  (c) the "120" next to each ghost was our alpha passed as `drawTag`'s amount/count → switched to
+  `drawTag(aspect, 0, 0, blend=771, alpha=0.5f, pos)` (translucent colored icon, no number).
+
+**UI placement (GUI-local, pinned to RT `ResearchTableInventoryTexture`):** button `(8,8)` →
+`(146,10)` (empty top-center gap between UsageHint x≤135 and CopyButton x≥207); spinner + metadata
+→ `(98,186)` (bottom gutter below parchment).
+
+**Checklist status:** #1 ✅ (after move). #2 ✅ button moved (awaiting visual confirm of (146,10)).
+#3 ✅ formula fix shipped (awaiting visual confirm of alignment + window-resize). Solve/Preview/
+Apply/Done pipeline ✅ verified on R2/R3/R4 live.
+
+**STILL OPEN / NEXT SESSION:**
+- Confirm ghost alignment on the hexes + at multiple window sizes (just shipped, not yet eyeballed).
+- Confirm button at (146,10) doesn't collide with the texture; tune if needed.
+- #4 Apply post-verify still optimistic (no deferred re-read of the note after server sync).
+- #5/#6 negative paths (ink-missing, INFEASIBLE_INVENTORY) NOT tested. User reported the GUI
+  "blocks" on these — needs reproduction + diagnosis (clarify what blocks).
+- **Cleanup before finishing the branch:** remove the temporary `ui/Diag.kt` + all `Diag.trace`/
+  `Diag.log` calls (tag `TCRS-DIAG`) in `SolveButtonUIComponent`, `LiveWiring.buildSnapshot`.
+- Then commit this session's fixes, then **Task 5.3** (`./gradlew build test`; finish-branch skill).
+
+Build: `./gradlew build` green on JDK 25; deploy the non-`-dev`/non-`-sources` reobf jar from
+`build/libs/` to the GTNH `mods/` folder. See memory `phase5-runclient-findings` for the same.
+
+## 2026-06-16 — Phase 5.3 (configurability + branch close-out)
+
+Spec: `docs/superpowers/specs/2026-06-16-config-timeouts-fast-solve-design.md`. Built test-first
+(RED→GREEN per unit); 231 tests green (was 219, +12).
+
+**Configurability (the three requested knobs):**
+- **Apply confirmation** — already existed as `previewConfirm` (default `true`); no change.
+- **Per-radius solve timeouts** — new config `maxSolveMsR2..R5` (0 = built-in 5/10/20/30 s). The
+  existing global `maxSolveMs` is now a **ceiling (`min`)**, not an override (a deliberate, approved
+  semantics change — raising a budget above the built-in is now done via the per-radius keys).
+  Precedence lives in the pure `resolveBudget(base, perRadiusMs, globalCapMs)` (`solver/Solver.kt`),
+  wired into `LiveWiring.buildSnapshot`. Radius→key mapping is the pure `perRadiusMs(...)`
+  (`config/Config.kt`), extracted for unit testing (Forge `Configuration` NPEs outside FML).
+- **Fast solve** — new config `fastSolve` (default `false`) → `SolveSnapshot.fast` → `SolveWorker`
+  → `SolveOptions.stopAtFirstFeasible`. In `solve()` a `stopEarly` flag returns the first feasible
+  incumbent (skips DFS entirely when the seed already produced one; `nodes == 0`) and forces a
+  non-exhaustive result, so fast mode reports `FEASIBLE_TIMEOUT`, never `OPTIMAL` (trivial
+  0/1-anchor boards still short-circuit to `OPTIMAL` before search — correct).
+
+**Tests added:** `solver/BudgetTest` (precedence), `solver/SolverFastModeTest` (early-exit +
+seed-skip + infeasible-unchanged + default regression), `config/ConfigTest` (pure `perRadiusMs`).
+
+**Cleanup:** removed temporary `ui/Diag.kt` + all 12 `TCRS-DIAG` call sites; the click handler now
+logs snapshot-build failures via a real `LogManager` logger instead of swallowing them.
+
+**Review:** Codex pre-release review — no correctness bugs (it confirmed the trivial-`OPTIMAL`
+nuance and the intended `maxSolveMs` cap change; its `seed=true` revert suggestion was declined, as
+that is the approved Phase 5.2 fix).
+
+**Docs:** README now states tested-on **GTNH 2.8.4** + hard dependencies (Forgelin 2.0.3-GTNH,
+UniMixins/`spongemixins`, Thaumcraft 4.2.3.5, Research Tweaks 1.3.0) + a Configuration section.
+
+Shipped as the `v1.0.0-beta` pre-release for in-game verification before the stable release.

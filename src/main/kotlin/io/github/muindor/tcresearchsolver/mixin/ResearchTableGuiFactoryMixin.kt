@@ -53,25 +53,30 @@ class ResearchTableGuiFactoryMixin {
         val worker = SolveWorker()
         val controller = SolveController(worker, LiveApplierPort(player, tile), previewConfirm = io.github.muindor.tcresearchsolver.config.Config.previewConfirm)
 
-        // First-cut placement — runClient (Phase 5) will tune these coordinates.
-        // Vector2D(Int, Int) confirmed via javap on ThaumcraftResearchTweaks-1.3.0.jar.
-        val buttonOrigin = Vector2D(8, 8)
+        // Placement in GUI-local coords (pinned to RT 1.3.0 ResearchTableInventoryTexture layout):
+        //  - Button: top-center wood gap between UsageHint (ends x=135) and CopyButton (starts x=207),
+        //    above the parchment (starts y=35). 50x12 fits the 72px gap.
+        //  - Spinner/metadata: bottom gutter below the parchment (ends y=185), wide empty band.
+        val buttonOrigin = Vector2D(146, 10)
         val button = SolveButtonUIComponent(
             bounds = Rectangle(buttonOrigin, Scale(50, 12)),
             controller = controller,
             worker = worker,
         ) { buildSnapshot(player, tile) }
 
-        val spinner = SpinnerComponent(Vector2D(8, 22), controller)
-        val ghost = GhostOverlayComponent(controller, HexPixelLayout::center, Vector2D(8, 36))
+        val spinner = SpinnerComponent(Vector2D(98, 186), controller)
+        val ghost = GhostOverlayComponent(controller, HexPixelLayout::center, Vector2D(98, 186))
 
+        // Spinner + ghost are BACKGROUND components (not foreground): RT's foreground pass is
+        // double-offset (see GhostOverlayComponent). Appended after RT's components, so they draw
+        // on top of the hex grid with the correct single (guiLeft,guiTop) offset.
         val acc = gui as ComposableContainerGuiAccessor
         acc.tcrsGetBackgrounds().add(button)
         acc.tcrsGetMouseOverables().add(button)
         acc.tcrsGetClickables().add(button)
         acc.tcrsGetTickables().add(button)
         acc.tcrsGetTickables().add(spinner)
-        acc.tcrsGetForegrounds().add(spinner)
-        acc.tcrsGetForegrounds().add(ghost)
+        acc.tcrsGetBackgrounds().add(spinner)
+        acc.tcrsGetBackgrounds().add(ghost)
     }
 }

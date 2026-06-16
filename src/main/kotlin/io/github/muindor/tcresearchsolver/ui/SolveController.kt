@@ -13,6 +13,8 @@ data class SolveSnapshot(
     val inventory: Inventory,
     val budget: SolveBudget,
     val pool: Map<Aspect, Int>,
+    /** Fast mode: stop at the first valid solution instead of proving optimality. */
+    val fast: Boolean = false,
 )
 
 // ---------------------------------------------------------------------------

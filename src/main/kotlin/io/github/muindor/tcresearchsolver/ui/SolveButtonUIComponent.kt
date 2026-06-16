@@ -8,6 +8,8 @@ import elan.tweaks.common.gui.component.UIContext
 import elan.tweaks.common.gui.dto.Rectangle
 import elan.tweaks.common.gui.dto.VectorXY
 import elan.tweaks.common.gui.peripheral.MouseButton
+import io.github.muindor.tcresearchsolver.TcResearchSolverMod
+import org.apache.logging.log4j.LogManager
 
 /**
  * A clickable "Solve / Cancel / Apply / Reset" button that mirrors the shape of
@@ -79,7 +81,14 @@ class SolveButtonUIComponent(
         if (!enabled()) return
 
         if (controller.state is SolveState.Idle) {
-            val snap = snapshotProvider() ?: return   // nothing solvable — ignore
+            val snap = try {
+                snapshotProvider()
+            } catch (t: Throwable) {
+                // A snapshot-build failure must not crash the RT GUI: log once and ignore the click.
+                log.error("Solve snapshot build failed", t)
+                return
+            }
+            if (snap == null) return // note not currently solvable
             controller.snapshot = snap
         }
 
@@ -119,4 +128,8 @@ class SolveButtonUIComponent(
      * (the applier is writing to the server; there is nothing the user can do).
      */
     private fun enabled(): Boolean = controller.state !is SolveState.Applying
+
+    private companion object {
+        private val log = LogManager.getLogger(TcResearchSolverMod.MODID)
+    }
 }

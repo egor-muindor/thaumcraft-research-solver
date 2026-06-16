@@ -83,6 +83,15 @@ class SolveWorker(
             board = snapshot.board,
             inventory = snapshot.inventory,
             budget = snapshot.budget,
+            // Greedy feasible-first seed: stitches the anchors together (Dijkstra over the product
+            // graph) to guarantee an incumbent before the optimal-first DFS begins. Without it, large
+            // boards (radius 4+) exhaust the time budget without finding ANY feasible board and return
+            // UNKNOWN_TIMEOUT; with it they return at worst FEASIBLE_TIMEOUT (a usable solution) and the
+            // B&B pruning (gated on having an incumbent) actually kicks in. Verified by SolverSeedTest.
+            seed = true,
+            // Fast mode (Config.fastSolve, carried on the snapshot): return the first valid solution
+            // instead of proving optimality. With seed=true this returns the seed incumbent immediately.
+            stopAtFirstFeasible = snapshot.fast,
             // Background thread: only touch atomics, and only for THIS generation.
             onProgress = { p -> if (generation.get() == gen) latestProgress.set(p) },
             // Cancel when: explicitly cancelled, superseded by a newer start, or orphaned (GUI closed).
