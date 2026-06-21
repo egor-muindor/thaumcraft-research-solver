@@ -11,7 +11,7 @@ import io.github.muindor.tcresearchsolver.ui.LiveApplierPort
 import io.github.muindor.tcresearchsolver.ui.SolveButtonUIComponent
 import io.github.muindor.tcresearchsolver.ui.SolveController
 import io.github.muindor.tcresearchsolver.ui.SolveWorker
-import io.github.muindor.tcresearchsolver.ui.SpinnerComponent
+import io.github.muindor.tcresearchsolver.ui.StatusLineComponent
 import io.github.muindor.tcresearchsolver.ui.buildSnapshot
 import net.minecraft.entity.player.EntityPlayer
 import org.spongepowered.asm.mixin.Mixin
@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable
 import thaumcraft.common.tiles.TileResearchTable
 
 /**
- * Appends the Solve UI components (button, spinner, ghost overlay) to the
+ * Appends the Solve UI components (button, status line, ghost overlay) to the
  * [ComposableContainerGui] assembled by [ResearchTableGuiFactory.create].
  *
  * Injection strategy: RETURN-append — the factory builds the GUI and returns it;
@@ -56,7 +56,7 @@ class ResearchTableGuiFactoryMixin {
         // Placement in GUI-local coords (pinned to RT 1.3.0 ResearchTableInventoryTexture layout):
         //  - Button: top-center wood gap between UsageHint (ends x=135) and CopyButton (starts x=207),
         //    above the parchment (starts y=35). 50x12 fits the 72px gap.
-        //  - Spinner/metadata: bottom gutter below the parchment (ends y=185), wide empty band.
+        //  - Status line/metadata: bottom gutter below the parchment (ends y=185), wide empty band.
         val buttonOrigin = Vector2D(146, 10)
         val button = SolveButtonUIComponent(
             bounds = Rectangle(buttonOrigin, Scale(50, 12)),
@@ -64,10 +64,10 @@ class ResearchTableGuiFactoryMixin {
             worker = worker,
         ) { buildSnapshot(player, tile) }
 
-        val spinner = SpinnerComponent(Vector2D(98, 186), controller)
+        val status = StatusLineComponent(Vector2D(98, 186), controller)
         val ghost = GhostOverlayComponent(controller, HexPixelLayout::center, Vector2D(98, 186))
 
-        // Spinner + ghost are BACKGROUND components (not foreground): RT's foreground pass is
+        // Status line + ghost are BACKGROUND components (not foreground): RT's foreground pass is
         // double-offset (see GhostOverlayComponent). Appended after RT's components, so they draw
         // on top of the hex grid with the correct single (guiLeft,guiTop) offset.
         val acc = gui as ComposableContainerGuiAccessor
@@ -75,8 +75,7 @@ class ResearchTableGuiFactoryMixin {
         acc.tcrsGetMouseOverables().add(button)
         acc.tcrsGetClickables().add(button)
         acc.tcrsGetTickables().add(button)
-        acc.tcrsGetTickables().add(spinner)
-        acc.tcrsGetBackgrounds().add(spinner)
+        acc.tcrsGetBackgrounds().add(status)
         acc.tcrsGetBackgrounds().add(ghost)
     }
 }
